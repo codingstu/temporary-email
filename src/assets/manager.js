@@ -109,6 +109,10 @@ function injectSiteConfig(html, env) {
  * @returns {Promise<Response>} 替换后的响应
  */
 async function injectSiteConfigToResponse(resp, env, extraHeaders = {}) {
+  // 重定向响应直接透传，不尝试读取 body（防止 ASSETS pretty URLs 307 导致空白页面）
+  if (resp.status >= 300 && resp.status < 400) {
+    return resp;
+  }
   try {
     const text = await resp.text();
     const injected = injectSiteConfig(text, env);

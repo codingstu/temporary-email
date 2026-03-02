@@ -30,6 +30,10 @@ database_id = "dc5d4853-1bb9-4f0f-9443-f7afa8d725ab" # 你的database_id
 directory = "public"
 # 显式指定绑定名，确保在 Worker 中通过 env.ASSETS 可用
 binding = "ASSETS"
+# 禁用 pretty URLs：阻止 ASSETS 把 .html 文件 307 重定向到无后缀路径
+# 否则 env.ASSETS.fetch('/html/admin.html') 会返回 307 空 body 而不是 HTML 内容
+html_handling = "none"
+not_found_handling = "none"
 
 
 # R2 存储桶绑定（用于保存完整 EML 内容）
