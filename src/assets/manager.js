@@ -137,9 +137,12 @@ export class AssetManager {
       '/index.html',
       '/login',
       '/login.html',
+      '/admin',
       '/admin.html',
+      '/html/admin.html',
       '/html/mailboxes.html',
       '/mailboxes.html',
+      '/mailbox',
       '/mailbox.html',
       '/html/mailbox.html',
       '/templates/app.html',
@@ -239,11 +242,11 @@ export class AssetManager {
       return await this.handleIndexPage(mappedRequest, env, mailDomains, JWT_TOKEN);
     }
 
-    if (pathname === '/admin.html') {
+    if (pathname === '/admin.html' || pathname === '/admin' || pathname === '/html/admin.html') {
       return await this.handleAdminPage(mappedRequest, env, JWT_TOKEN);
     }
 
-    if (pathname === '/mailbox.html' || pathname === '/html/mailbox.html') {
+    if (pathname === '/mailbox.html' || pathname === '/mailbox' || pathname === '/html/mailbox.html') {
       return await this.handleMailboxPage(mappedRequest, env, JWT_TOKEN);
     }
     if (pathname === '/mailboxes.html' || pathname === '/html/mailboxes.html') {
@@ -316,30 +319,26 @@ export class AssetManager {
   }
 
   handlePathMapping(request, url) {
-    let targetUrl = url.toString();
+    // 路径 → ASSETS 实际文件路径的映射表
+    // html_handling="none" 关闭后，ASSETS 不再做任何自动路径解析，
+    // 必须精确映射到 public/ 下的实际文件路径
+    const pathMap = {
+      '/':               '/index.html',
+      '/login':          '/html/login.html',
+      '/login.html':     '/html/login.html',
+      '/admin':          '/html/admin.html',
+      '/admin.html':     '/html/admin.html',
+      '/mailbox':        '/html/mailbox.html',
+      '/mailbox.html':   '/html/mailbox.html',
+      '/mailboxes.html': '/html/mailboxes.html',
+    };
 
-    if (url.pathname === '/login') {
-      targetUrl = new URL('/login.html', url).toString();
-    }
-
-    if (url.pathname === '/admin') {
-      targetUrl = new URL('/html/admin.html', url).toString();
-    }
-    if (url.pathname === '/admin.html') {
-      targetUrl = new URL('/html/admin.html', url).toString();
-    }
-
-    if (url.pathname === '/mailbox') {
-      targetUrl = new URL('/html/mailbox.html', url).toString();
-    }
-    if (url.pathname === '/mailbox.html') {
-      targetUrl = new URL('/html/mailbox.html', url).toString();
-    }
-    if (url.pathname === '/mailboxes.html') {
-      targetUrl = new URL('/html/mailboxes.html', url).toString();
+    const mapped = pathMap[url.pathname];
+    if (mapped) {
+      return new Request(new URL(mapped, url).toString(), request);
     }
 
-    return new Request(targetUrl, request);
+    return new Request(url.toString(), request);
   }
 
   async handleIndexPage(request, env, mailDomains, JWT_TOKEN) {
