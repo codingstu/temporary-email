@@ -169,6 +169,18 @@ export function createRouter() {
     return Response.json(response);
   });
 
+  // =================== 站点配置（公开，无需认证） ===================
+  router.get('/api/site-config', async (context) => {
+    const { env } = context;
+    return Response.json({
+      siteName: env.SITE_NAME || "Leon's 临时邮件",
+      footerText: env.FOOTER_TEXT || '简约而不简单',
+      repoUrl: env.REPO_URL || ''
+    }, {
+      headers: { 'Cache-Control': 'public, max-age=300' }
+    });
+  });
+
   // =================== API路由委托 ===================
   router.get('/api/*', async (context) => {
     return await delegateApiRequest(context);

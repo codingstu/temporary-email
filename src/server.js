@@ -18,6 +18,38 @@ import { forwardByLocalPart, forwardByMailboxConfig } from './email/forwarder.js
 import { parseEmailBody, extractVerificationCode } from './email/parser.js';
 import { getForwardTarget } from './db/mailboxes.js';
 
+// 单例：路由器和资源管理器只需创建一次（它们是无状态的）
+let _router = null;
+let _assetManager = null;
+
+function getRouter() {
+  if (!_router) {
+    _router = createRouter();
+    _router.use(authMiddleware);
+  }
+  return _router;
+}
+
+function getAssetManager() {
+  if (!_assetManager) {
+    _assetManager = createAssetManager();
+  }
+  return _assetManager;
+}
+
+/**
+ * 为响应添加安全头
+ * @param {Response} response - 原始响应
+ * @returns {Response} 带安全头的响应
+ */
+function addSecurityHeaders(response) {
+  const resp = new Response(response.body, response);
+  resp.headers.set('X-Content-Type-Options', 'nosniff');
+  resp.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  resp.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  return resp;
+}
+
 export default {
   /**
    * HTTP请求处理器
@@ -42,19 +74,19 @@ export default {
       .map(d => d.trim())
       .filter(Boolean);
 
-    // 创建路由器并添加认证中间件
-    const router = createRouter();
-    router.use(authMiddleware);
+    // 使用单例路由器处理请求
+    const router = getRouter();
 
     // 尝试使用路由器处理请求
     const routeResponse = await router.handle(request, { request, env, ctx });
     if (routeResponse) {
-      return routeResponse;
+      return addSecurityHeaders(routeResponse);
     }
 
-    // 使用资源管理器处理静态资源请求
-    const assetManager = createAssetManager();
-    return await assetManager.handleAssetRequest(request, env, MAIL_DOMAINS);
+    // 使用单例资源管理器处理静态资源请求
+    const assetManager = getAssetManager();
+    const assetResponse = await assetManager.handleAssetRequest(request, env, MAIL_DOMAINS);
+    return addSecurityHeaders(assetResponse);
   },
 
   /**

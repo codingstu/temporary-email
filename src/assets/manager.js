@@ -6,6 +6,108 @@
 import { resolveAuthPayload } from '../middleware/auth.js';
 
 /**
+ * 获取站点配置
+ * @param {object} env - 环境变量
+ * @returns {object} 站点配置
+ */
+function getSiteConfig(env) {
+  return {
+    siteName: env.SITE_NAME || "Leon's 临时邮件",
+    footerText: env.FOOTER_TEXT || '简约而不简单',
+    repoUrl: env.REPO_URL || '',
+    hasGuestPassword: !!(env.GUEST_PASSWORD)
+  };
+}
+
+/**
+ * 将站点配置注入到 HTML 文本中
+ * 替换所有硬编码的站点名称、页脚文字、仓库链接
+ * @param {string} html - 原始 HTML
+ * @param {object} env - 环境变量
+ * @returns {string} 注入后的 HTML
+ */
+function injectSiteConfig(html, env) {
+  const cfg = getSiteConfig(env);
+  let result = html;
+
+  // 替换页面标题中的站点名称
+  result = result.replace(/iDing's临时邮箱/g, cfg.siteName);
+  result = result.replace(/iDing's  临时邮箱/g, cfg.siteName);
+  result = result.replace(/>临时邮箱</g, `>${cfg.siteName}<`);
+
+  // 替换 <title> 中的 "临时邮箱" (不带 > < 的情况)
+  result = result.replace(/<title>登录 - 临时邮箱<\/title>/g, `<title>登录 - ${cfg.siteName}</title>`);
+  result = result.replace(/<title>加载中 - 临时邮箱<\/title>/g, `<title>加载中 - ${cfg.siteName}</title>`);
+  result = result.replace(/<title>临时邮箱<\/title>/g, `<title>${cfg.siteName}</title>`);
+
+  // 替换登录页的 h1
+  result = result.replace(/登录到临时邮箱/g, `登录到${cfg.siteName}`);
+
+  // 替换 loading 页面的标题
+  result = result.replace(/<h1 class="title">临时邮箱<\/h1>/g, `<h1 class="title">${cfg.siteName}</h1>`);
+
+  // 替换页脚
+  result = result.replace(
+    /iDing's  临时邮箱 - 简约而不简单/g,
+    `${cfg.siteName} - ${cfg.footerText}`
+  );
+  // 兜底: 如果上面没替换完
+  result = result.replace(
+    /简约而不简单/g,
+    cfg.footerText
+  );
+
+  // 替换占位符中的 iDing 品牌
+  result = result.replace(/例如：iDing 支持团队/g, `例如：${cfg.siteName}`);
+
+  // 登录页访客提示：如果没有配置 GUEST_PASSWORD，则隐藏访客提示
+  if (!cfg.hasGuestPassword) {
+    result = result.replace(
+      /<div[^>]*style="[^"]*font-size:12px[^"]*"[^>]*>[\s\S]*?账号：guest[\s\S]*?<\/div>/g,
+      ''
+    );
+  }
+
+  // 替换 GitHub 仓库链接
+  if (cfg.repoUrl) {
+    result = result.replace(
+      /href="https:\/\/github\.com\/idinging\/freemail"/g,
+      `href="${cfg.repoUrl}"`
+    );
+  } else {
+    // 没有配置 repoUrl 时，隐藏 GitHub 按钮
+    result = result.replace(
+      /<a\s+id="repo"[^>]*>[\s\S]*?<\/a>/g,
+      ''
+    );
+  }
+
+  return result;
+}
+
+/**
+ * 将 Response 的 HTML 内容替换后返回新的 Response
+ * @param {Response} resp - 原始响应
+ * @param {object} env - 环境变量
+ * @param {object} [extraHeaders] - 额外的 headers
+ * @returns {Promise<Response>} 替换后的响应
+ */
+async function injectSiteConfigToResponse(resp, env, extraHeaders = {}) {
+  try {
+    const text = await resp.text();
+    const injected = injectSiteConfig(text, env);
+    const headers = {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      ...extraHeaders
+    };
+    return new Response(injected, { headers, status: resp.status });
+  } catch (_) {
+    return resp;
+  }
+}
+
+/**
  * 静态资源管理器
  */
 export class AssetManager {
@@ -125,6 +227,13 @@ export class AssetManager {
       return await this.handleAllMailboxesPage(mappedRequest, env, JWT_TOKEN);
     }
 
+    // 对所有 HTML 页面和模板注入站点配置
+    const isHtmlPage = pathname.endsWith('.html') || pathname === '/login' || pathname === '/admin';
+    if (isHtmlPage) {
+      const resp = await env.ASSETS.fetch(mappedRequest);
+      return await injectSiteConfigToResponse(resp, env);
+    }
+
     return env.ASSETS.fetch(mappedRequest);
   }
 
@@ -223,10 +332,14 @@ export class AssetManager {
     try {
       const text = await resp.text();
 
-      const injected = text.replace(
+      // 注入邮件域名
+      let injected = text.replace(
         '<meta name="mail-domains" content="">',
         `<meta name="mail-domains" content="${mailDomains.join(',')}">`
       );
+
+      // 注入站点配置
+      injected = injectSiteConfig(injected, env);
 
       return new Response(injected, {
         headers: {
@@ -248,7 +361,8 @@ export class AssetManager {
         new URL('/templates/loading.html?redirect=%2Fadmin.html', url).toString(),
         request
       );
-      return env.ASSETS.fetch(loadingReq);
+      const loadingResp = await env.ASSETS.fetch(loadingReq);
+      return await injectSiteConfigToResponse(loadingResp, env);
     }
 
     const isAllowed = (payload.role === 'admin' || payload.role === 'guest' || payload.role === 'mailbox');
@@ -256,7 +370,8 @@ export class AssetManager {
       return Response.redirect(new URL('/', url).toString(), 302);
     }
 
-    return env.ASSETS.fetch(request);
+    const resp = await env.ASSETS.fetch(request);
+    return await injectSiteConfigToResponse(resp, env);
   }
 
   async handleMailboxPage(request, env, JWT_TOKEN) {
@@ -268,7 +383,8 @@ export class AssetManager {
         new URL('/templates/loading.html?redirect=%2Fhtml%2Fmailbox.html', url).toString(),
         request
       );
-      return env.ASSETS.fetch(loadingReq);
+      const loadingResp = await env.ASSETS.fetch(loadingReq);
+      return await injectSiteConfigToResponse(loadingResp, env);
     }
 
     if (payload.role !== 'mailbox') {
@@ -279,7 +395,8 @@ export class AssetManager {
       }
     }
 
-    return env.ASSETS.fetch(request);
+    const resp = await env.ASSETS.fetch(request);
+    return await injectSiteConfigToResponse(resp, env);
   }
 
   async handleAllMailboxesPage(request, env, JWT_TOKEN) {
@@ -290,14 +407,16 @@ export class AssetManager {
         new URL('/templates/loading.html?redirect=%2Fhtml%2Fmailboxes.html', url).toString(),
         request
       );
-      return env.ASSETS.fetch(loadingReq);
+      const loadingResp = await env.ASSETS.fetch(loadingReq);
+      return await injectSiteConfigToResponse(loadingResp, env);
     }
     const isStrictAdmin = (payload.role === 'admin' && (payload.username === '__root__' || payload.username));
     const isGuest = (payload.role === 'guest');
     if (!isStrictAdmin && !isGuest) {
       return Response.redirect(new URL('/', url).toString(), 302);
     }
-    return env.ASSETS.fetch(request);
+    const resp = await env.ASSETS.fetch(request);
+    return await injectSiteConfigToResponse(resp, env);
   }
 
   addAllowedPath(path) {
