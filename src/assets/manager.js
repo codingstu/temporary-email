@@ -34,14 +34,11 @@ function injectSiteConfig(html, env) {
   result = result.replace(/iDing's临时邮箱/g, cfg.siteName);
   result = result.replace(/iDing's  临时邮箱/g, cfg.siteName);
 
-  // 替换 brand-text 中的 "临时邮箱"（新版简化占位符）
-  result = result.replace(/(class="brand-text">)临时邮箱/g, `$1${cfg.siteName}`);
+  // 替换 brand-text 中的 "临时邮箱"（新版简化占位符），精确匹配 class 属性后的内容
   result = result.replace(/(class="brand-text">)临时邮箱(\s*-\s*)/g, `$1${cfg.siteName}$2`);
+  result = result.replace(/(class="brand-text">)临时邮箱(<)/g, `$1${cfg.siteName}$2`);
 
-  // 替换 > 临时邮箱 < 标签内容
-  result = result.replace(/>临时邮箱</g, `>${cfg.siteName}<`);
-
-  // 替换 <title> 中的 "临时邮箱"
+  // 替换 <title> 中的站点名称（精确匹配每种 title 格式）
   result = result.replace(/<title>登录 - 临时邮箱<\/title>/g, `<title>登录 - ${cfg.siteName}</title>`);
   result = result.replace(/<title>加载中 - 临时邮箱<\/title>/g, `<title>加载中 - ${cfg.siteName}</title>`);
   result = result.replace(/<title>临时邮箱<\/title>/g, `<title>${cfg.siteName}</title>`);
@@ -179,9 +176,11 @@ export class AssetManager {
       '/admin.html',
       '/admin',
       '/admin/',
+      '/html/admin.html',
       '/mailboxes.html',
       '/html/mailboxes.html',
       '/mailbox.html',
+      '/html/mailbox.html',
       '/mailbox',
       '/mailbox/'
     ]);

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="precheck-hide">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,43 +10,12 @@
     <noscript>
       <meta http-equiv="refresh" content="0; url=/templates/loading.html?redirect=%2Fhtml%2Fadmin.html" />
     </noscript>
-    <style>.precheck-hide body{ visibility: hidden !important; }</style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/css/app.css" />
     <link rel="stylesheet" href="/css/admin.css" />
     <script src="/js/site-config.js" async></script>
     <script src="/js/auth-guard.js" defer></script>
-    <script>
-      // 访问管理页先做前端快速鉴权，避免内容闪现；未登录或权限不足均进入 loading 或回首页
-      (function(){
-        // 安全底线：3秒内必须有结果，防止页面永久空白
-        var _fallbackTimer = setTimeout(function(){
-          if (document.documentElement.classList.contains('precheck-hide')) {
-            location.replace('/templates/loading.html?redirect=%2Fhtml%2Fadmin.html&status=' + encodeURIComponent('正在校验权限…'));
-          }
-        }, 3000);
-        var controller = new AbortController();
-        var tid = setTimeout(function(){ try{ controller.abort(); }catch(_){ } }, 5000);
-        fetch('/api/session', { headers: { 'Cache-Control': 'no-cache' }, signal: controller.signal })
-          .then(function(r){ clearTimeout(tid); return r.ok ? r.json() : Promise.reject('unauth'); })
-          .then(function(s) {
-            clearTimeout(_fallbackTimer);
-            if (s && (s.role === 'admin' || s.role === 'guest' || s.strictAdmin)){
-              try{ document.documentElement.classList.remove('precheck-hide'); }catch(_){ }
-              return;
-            }
-            // 已登录但无权限：回首页
-            location.replace('/');
-          })
-          .catch(function() {
-            clearTimeout(_fallbackTimer);
-            // 未登录：进入加载页做鉴权
-            if (window.AuthGuard) { window.AuthGuard.goLoading('/html/admin.html', '正在校验权限…'); }
-            else { location.replace('/templates/loading.html?redirect=%2Fhtml%2Fadmin.html&status=' + encodeURIComponent('正在校验权限…')); }
-          });
-      })();
-    </script>
   </head>
   <body class="admin-page">
     <div class="topbar">

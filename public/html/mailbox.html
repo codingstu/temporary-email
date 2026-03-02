@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="precheck-hide">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,44 +7,12 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <style>.precheck-hide body{ visibility: hidden !important; }</style>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/css/app.css" />
   <link rel="stylesheet" href="/css/mailbox.css" />
   <script src="/js/site-config.js" async></script>
-  <script src="/js/site-config.js" async></script>
   <script src="/js/auth-guard.js" defer></script>
-  <script>
-    // 访问邮箱页先做前端快速鉴权，仅允许 mailbox 角色
-    (function(){
-      // 安全底线：3秒内必须有结果，防止页面永久空白
-      var _fallbackTimer = setTimeout(function(){
-        if (document.documentElement.classList.contains('precheck-hide')) {
-          location.replace('/templates/loading.html?redirect=%2Fhtml%2Fmailbox.html&status=' + encodeURIComponent('正在校验权限…'));
-        }
-      }, 3000);
-      var controller = new AbortController();
-      var tid = setTimeout(function(){ try{ controller.abort(); }catch(_){ } }, 5000);
-      fetch('/api/session', { headers: { 'Cache-Control': 'no-cache' }, signal: controller.signal })
-        .then(function(r){ clearTimeout(tid); return r.ok ? r.json() : Promise.reject('unauth'); })
-        .then(function(s) {
-          clearTimeout(_fallbackTimer);
-          if (s && s.role === 'mailbox'){
-            try{ document.documentElement.classList.remove('precheck-hide'); }catch(_){ }
-            return;
-          }
-          // 其他角色：回首页
-          location.replace('/');
-        })
-        .catch(function() {
-          clearTimeout(_fallbackTimer);
-          // 未登录：进入加载页做鉴权
-          if (window.AuthGuard) { window.AuthGuard.goLoading('/html/mailbox.html', '正在校验权限…'); }
-          else { location.replace('/templates/loading.html?redirect=%2Fhtml%2Fmailbox.html&status=' + encodeURIComponent('正在校验权限…')); }
-        });
-    })();
-  </script>
 </head>
 <body>
 <div class="topbar">
