@@ -1,4 +1,4 @@
-name = "emailitem"
+name = "emailtem"
 # name = "mail-exhibit"
 main = "src/server.js"
 compatibility_date = "2024-01-01"
@@ -7,18 +7,18 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding = "TEMP_MAIL_DB"
 database_name = "maill_free_db" #你的d1数据库名称
-database_id = "c82663ac-62b6-4ba6-be81-cbe297f2a3dd" # 你的database_id
+database_id = "dc5d4853-1bb9-4f0f-9443-f7afa8d725ab" # 你的database_id
 # 登录会话过期时间（单位：天，默认7天）
 # 环境变量
 [vars]
 # FORWARD_RULES="[{"prefix":"vip","email":"a@example.com"},{"prefix":"*","email":"2141083706@qq.com"}]"
-# ====== 站点个性化配置（也可在 CF Dashboard → Workers → Settings → Variables 中配置） ======
-# 站点名称（显示在左上角品牌标识、页面标题、页脚等位置，默认 "Leon's 临时邮件"）
-SITE_NAME = "Leon's 临时邮箱"
-# 页脚文字（默认 "简约而不简单"）
-FOOTER_TEXT = "简约而不简单"
+# ====== 站点个性化配置 请在 CF Dashboard → Workers → Settings → Variables 中配置，勿在此处设置（此处会覆盖 Dashboard 的值）======
+# 站点名称（显示在左上角品牌标识、页面标题、页脚等位置）
+# SITE_NAME = "Leon's 临时邮箱"
+# 页脚文字
+# FOOTER_TEXT = "简约而不简单"
 # GitHub 仓库地址（留空或删除则隐藏 GitHub 按钮）
-REPO_URL = "https://github.com/codingstu/temporary-email"
+# REPO_URL = "https://github.com/codingstu/temporary-email"
 
 
 # 静态资源目录（Workers + Assets）
