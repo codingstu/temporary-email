@@ -30,15 +30,24 @@ function injectSiteConfig(html, env) {
   const cfg = getSiteConfig(env);
   let result = html;
 
-  // 替换页面标题中的站点名称
+  // 替换页面标题中的站点名称（兼容旧版 iDing's临时邮箱 和新版 临时邮箱 占位符）
   result = result.replace(/iDing's临时邮箱/g, cfg.siteName);
   result = result.replace(/iDing's  临时邮箱/g, cfg.siteName);
+
+  // 替换 brand-text 中的 "临时邮箱"（新版简化占位符）
+  result = result.replace(/(class="brand-text">)临时邮箱/g, `$1${cfg.siteName}`);
+  result = result.replace(/(class="brand-text">)临时邮箱(\s*-\s*)/g, `$1${cfg.siteName}$2`);
+
+  // 替换 > 临时邮箱 < 标签内容
   result = result.replace(/>临时邮箱</g, `>${cfg.siteName}<`);
 
-  // 替换 <title> 中的 "临时邮箱" (不带 > < 的情况)
+  // 替换 <title> 中的 "临时邮箱"
   result = result.replace(/<title>登录 - 临时邮箱<\/title>/g, `<title>登录 - ${cfg.siteName}</title>`);
   result = result.replace(/<title>加载中 - 临时邮箱<\/title>/g, `<title>加载中 - ${cfg.siteName}</title>`);
   result = result.replace(/<title>临时邮箱<\/title>/g, `<title>${cfg.siteName}</title>`);
+  result = result.replace(/<title>我的邮箱 - 临时邮箱<\/title>/g, `<title>我的邮箱 - ${cfg.siteName}</title>`);
+  result = result.replace(/<title>邮箱管理 - 临时邮箱<\/title>/g, `<title>邮箱管理 - ${cfg.siteName}</title>`);
+  result = result.replace(/<title>用户管理 - 临时邮箱<\/title>/g, `<title>用户管理 - ${cfg.siteName}</title>`);
 
   // 替换登录页的 h1
   result = result.replace(/登录到临时邮箱/g, `登录到${cfg.siteName}`);
@@ -46,9 +55,13 @@ function injectSiteConfig(html, env) {
   // 替换 loading 页面的标题
   result = result.replace(/<h1 class="title">临时邮箱<\/h1>/g, `<h1 class="title">${cfg.siteName}</h1>`);
 
-  // 替换页脚
+  // 替换页脚（兼容旧版和新版）
   result = result.replace(
     /iDing's  临时邮箱 - 简约而不简单/g,
+    `${cfg.siteName} - ${cfg.footerText}`
+  );
+  result = result.replace(
+    /临时邮箱 - 简约而不简单/g,
     `${cfg.siteName} - ${cfg.footerText}`
   );
   // 兜底: 如果上面没替换完
@@ -70,9 +83,15 @@ function injectSiteConfig(html, env) {
 
   // 替换 GitHub 仓库链接
   if (cfg.repoUrl) {
+    // 替换旧版硬编码链接
     result = result.replace(
       /href="https:\/\/github\.com\/idinging\/freemail"/g,
       `href="${cfg.repoUrl}"`
+    );
+    // 替换新版占位符链接，并显示按钮
+    result = result.replace(
+      /href="#"([^>]*?)style="display:none"/g,
+      `href="${cfg.repoUrl}"$1`
     );
   } else {
     // 没有配置 repoUrl 时，隐藏 GitHub 按钮

@@ -1,6 +1,6 @@
 # Freemail - 临时邮箱服务
 
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/idinging/freemail)
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/codingstu/temporary-email)
 
 一个基于 Cloudflare Workers + D1 + R2 构建的**开源临时邮箱服务**，支持邮件接收、发送、转发、用户管理等完整功能。
 
@@ -114,6 +114,9 @@
 | JWT_TOKEN | JWT 签名密钥 | 是 |
 | RESEND_API_KEY | Resend 发件密钥，支持多域名配置 | 否 |
 | FORWARD_RULES | 邮件转发规则 | 否 |
+| SITE_NAME | 站点名称（左上角品牌、标题、页脚等） | 否 |
+| REPO_URL | GitHub 仓库地址（留空隐藏按钮） | 否 |
+| FOOTER_TEXT | 页脚文字（默认 "简约而不简单"） | 否 |
 
 <details>
 <summary><strong>RESEND_API_KEY 配置格式</strong></summary>
@@ -191,7 +194,7 @@ wrangler d1 execute TEMP_MAIL_DB --command "SELECT * FROM mailboxes LIMIT 10"
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=idinging/freemail&type=Date)](https://www.star-history.com/#idinging/freemail&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=codingstu/temporary-email&type=Date)](https://www.star-history.com/#codingstu/temporary-email&Date)
 
 ## 联系方式
 

@@ -43,29 +43,33 @@
     var repoUrl = cfg.repoUrl || '';
     var footerText = cfg.footerText || '';
 
-    if (!siteName && !repoUrl && !footerText) return;
+    // 如果 API 返回的都是默认值，也要尝试应用
+    // siteName 可能是默认的 "Leon's 临时邮件" 或用户自定义的
 
-    // 1. 更新 brand-text 元素
+    // 1. 更新 brand-text 元素（品牌名）
     if (siteName) {
       var brandEls = document.querySelectorAll('.brand-text');
       for (var i = 0; i < brandEls.length; i++) {
         var el = brandEls[i];
         var text = el.textContent || '';
-        // 替换 "iDing's临时邮箱" 或类似文字
+        // 替换各种可能的写法
         text = text.replace(/iDing's\s*临时邮箱/g, siteName);
-        text = text.replace(/临时邮箱/g, siteName);
+        // 对于 "临时邮箱 - 邮箱总览" 这样的后缀，保留后缀部分
+        text = text.replace(/^临时邮箱(\s*-\s*)/, siteName + '$1');
+        // 如果还有剩余的 "临时邮箱" 文本（纯占位符）
+        if (text === '临时邮箱') {
+          text = siteName;
+        }
         el.textContent = text;
       }
 
-      // 更新管理页标题区的 span（admin.html 的品牌标题不带 class）
+      // 更新所有 topbar 品牌区域的 span（含 admin.html 等不带 brand-text class 的）
       var topbarSpans = document.querySelectorAll('.topbar .brand span');
       for (var j = 0; j < topbarSpans.length; j++) {
         var span = topbarSpans[j];
-        if (!span.className && span.textContent) {
-          var t = span.textContent;
-          if (/iDing's\s*临时邮箱/.test(t) || /临时邮箱/.test(t)) {
-            span.textContent = t.replace(/iDing's\s*临时邮箱/g, siteName).replace(/临时邮箱/g, siteName);
-          }
+        var t = span.textContent || '';
+        if (/iDing's\s*临时邮箱/.test(t) || (/临时邮箱/.test(t) && !/brand-icon/.test(span.className || ''))) {
+          span.textContent = t.replace(/iDing's\s*临时邮箱/g, siteName).replace(/临时邮箱/g, siteName);
         }
       }
 
@@ -77,12 +81,12 @@
       }
 
       // 更新 loading 页的 h1.title
-      var h1 = document.querySelector('h1.title');
-      if (h1 && /临时邮箱/.test(h1.textContent)) {
-        h1.textContent = h1.textContent.replace(/临时邮箱/g, siteName);
+      var h1Title = document.querySelector('h1.title');
+      if (h1Title && /临时邮箱/.test(h1Title.textContent)) {
+        h1Title.textContent = h1Title.textContent.replace(/临时邮箱/g, siteName);
       }
 
-      // 更新登录页的 h1（"登录到临时邮箱"）
+      // 更新所有 h1（登录页 "登录到临时邮箱" 等）
       var allH1 = document.querySelectorAll('h1');
       for (var k = 0; k < allH1.length; k++) {
         var h1Text = allH1[k].textContent || '';
@@ -93,8 +97,9 @@
     }
 
     // 2. 更新 GitHub 仓库链接
-    var repoEl = document.getElementById('repo');
-    if (repoEl) {
+    var repoEls = document.querySelectorAll('#repo');
+    for (var r = 0; r < repoEls.length; r++) {
+      var repoEl = repoEls[r];
       if (repoUrl) {
         repoEl.href = repoUrl;
         repoEl.style.display = '';
@@ -105,21 +110,18 @@
     }
 
     // 3. 更新页脚
-    if (footerText || siteName) {
-      var footer = document.querySelector('.global-footer');
-      if (footer) {
-        var year = new Date().getFullYear();
-        var name = siteName || "iDing's  临时邮箱";
-        var ft = footerText || '简约而不简单';
-        var yearSpan = footer.querySelector('#footer-year');
-        footer.textContent = '';
-        footer.appendChild(document.createTextNode('\u00A9 '));
-        var ys = document.createElement('span');
-        ys.id = 'footer-year';
-        ys.textContent = year;
-        footer.appendChild(ys);
-        footer.appendChild(document.createTextNode(' ' + name + ' - ' + ft));
-      }
+    var footer = document.querySelector('.global-footer');
+    if (footer) {
+      var year = new Date().getFullYear();
+      var name = siteName || '临时邮箱';
+      var ft = footerText || '简约而不简单';
+      footer.textContent = '';
+      footer.appendChild(document.createTextNode('\u00A9 '));
+      var ys = document.createElement('span');
+      ys.id = 'footer-year';
+      ys.textContent = year;
+      footer.appendChild(ys);
+      footer.appendChild(document.createTextNode(' ' + name + ' - ' + ft));
     }
   }
 
