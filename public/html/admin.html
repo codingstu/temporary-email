@@ -20,9 +20,18 @@
     <script>
       // 访问管理页先做前端快速鉴权，避免内容闪现；未登录或权限不足均进入 loading 或回首页
       (function(){
-        fetch('/api/session', { headers: { 'Cache-Control': 'no-cache' } })
-          .then(r => r.ok ? r.json() : Promise.reject('unauth'))
-          .then(s => {
+        // 安全底线：3秒内必须有结果，防止页面永久空白
+        var _fallbackTimer = setTimeout(function(){
+          if (document.documentElement.classList.contains('precheck-hide')) {
+            location.replace('/templates/loading.html?redirect=%2Fhtml%2Fadmin.html&status=' + encodeURIComponent('正在校验权限…'));
+          }
+        }, 3000);
+        var controller = new AbortController();
+        var tid = setTimeout(function(){ try{ controller.abort(); }catch(_){ } }, 5000);
+        fetch('/api/session', { headers: { 'Cache-Control': 'no-cache' }, signal: controller.signal })
+          .then(function(r){ clearTimeout(tid); return r.ok ? r.json() : Promise.reject('unauth'); })
+          .then(function(s) {
+            clearTimeout(_fallbackTimer);
             if (s && (s.role === 'admin' || s.role === 'guest' || s.strictAdmin)){
               try{ document.documentElement.classList.remove('precheck-hide'); }catch(_){ }
               return;
@@ -30,7 +39,8 @@
             // 已登录但无权限：回首页
             location.replace('/');
           })
-          .catch(() => {
+          .catch(function() {
+            clearTimeout(_fallbackTimer);
             // 未登录：进入加载页做鉴权
             if (window.AuthGuard) { window.AuthGuard.goLoading('/html/admin.html', '正在校验权限…'); }
             else { location.replace('/templates/loading.html?redirect=%2Fhtml%2Fadmin.html&status=' + encodeURIComponent('正在校验权限…')); }
