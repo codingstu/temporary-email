@@ -12,12 +12,13 @@ database_id = "c82663ac-62b6-4ba6-be81-cbe297f2a3dd" # 你的database_id
 # 环境变量
 [vars]
 # FORWARD_RULES="[{"prefix":"vip","email":"a@example.com"},{"prefix":"*","email":"2141083706@qq.com"}]"
+# ====== 站点个性化配置（也可在 CF Dashboard → Workers → Settings → Variables 中配置） ======
 # 站点名称（显示在左上角品牌标识、页面标题、页脚等位置，默认 "Leon's 临时邮件"）
-# SITE_NAME = "Leon's 临时邮件"
+SITE_NAME = "Leon's 临时邮箱"
 # 页脚文字（默认 "简约而不简单"）
-# FOOTER_TEXT = "简约而不简单"
-# GitHub 仓库地址（留空则隐藏 GitHub 按钮）
-# REPO_URL = "https://github.com/idinging/freemail"
+FOOTER_TEXT = "简约而不简单"
+# GitHub 仓库地址（留空或删除则隐藏 GitHub 按钮）
+REPO_URL = "https://github.com/codingstu/temporary-email"
 
 
 # 静态资源目录（Workers + Assets）

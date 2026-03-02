@@ -41,8 +41,10 @@ async function api(path, options) {
 
 // 加载模板
 const app = document.getElementById('app');
-const templateResp = await fetch('/html/app.html', { cache: 'force-cache' }).catch(() => null);
+const templateResp = await fetch('/html/app.html', { cache: 'no-store' }).catch(() => null);
 app.innerHTML = templateResp && templateResp.ok ? await templateResp.text() : await (await fetch('/html/app.html', { cache: 'no-cache' })).text();
+// 模板加载后，立即应用站点配置（覆盖任何可能缓存的旧值）
+if (window.__applySiteConfig) window.__applySiteConfig();
 
 // DOM 元素
 const els = {

@@ -142,6 +142,7 @@ export class AssetManager {
       '/app-mobile.css',
       '/mailbox.css',
       '/auth-guard.js',
+      '/site-config.js',
       '/storage.js'
     ]);
 
