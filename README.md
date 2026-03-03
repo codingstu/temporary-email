@@ -1,7 +1,5 @@
 # Freemail - 临时邮箱服务
 
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/codingstu/temporary-email)
-
 一个基于 Cloudflare Workers + D1 + R2 构建的**开源临时邮箱服务**，支持邮件接收、发送、转发、用户管理等完整功能。
 
 **当前版本：V4.8** - 新增单个邮件转发和收藏功能
@@ -9,35 +7,6 @@
 `转发的地址需要在cloudflare Email Addresses中验证`
 
 📖 **[一键部署指南](docs/yijianbushu.md)** | 📬 **[Resend 发件配置](docs/resend.md)** | 📚 **[API 文档](docs/api.md)**
-
-## 📸 项目展示
-### 体验地址： https://mailexhibit.dinging.top/
-
-### 体验账号： guest
-### 体验密码： admin
-### 页面展示
-
-#### 登陆
-![登陆页面](pic/dlu.png)
-#### 首页
-![首页展示](pic/shouye.png)
-
-### 手机端生成与历史
-<div style="display: flex; gap: 20px; justify-content: center; margin: 20px 0;">
-  <img src="./pic/phone/shouye.png" alt="手机端生成邮箱" style="height: 400px;" />
-  <img src="./pic/phone/lishi.png" alt="手机端历史邮箱" style="height: 400px;" />
-</div>
-
-### 单个邮箱页
-
-![单个邮箱首页](./pic/v4/youxiang.png)
-
-### 全部邮箱预览
-![单个邮箱首页](./pic/v4/xiugaiquanju.png)
-![单个邮箱首页](./pic/v4/liebiao.png)
-
-
-#### [更多展示点击查看](docs/zhanshi.md)
 
 ## 功能特性
 
@@ -96,7 +65,7 @@
 
 ### 快速开始
 
-1. **一键部署**：点击顶部按钮，按照 [部署指南](docs/yijianbushu.md) 完成配置
+1. **部署到 Cloudflare**：Fork 本仓库，按照 [部署指南](docs/yijianbushu.md) 完成配置
 2. **配置邮件路由**（收件必需）：域名 → Email Routing → Catch-all → 绑定 Worker
 3. **配置发件**（可选）：参考 [Resend 配置教程](docs/resend.md)
 
@@ -146,8 +115,6 @@ RESEND_API_KEY='{"domain1.com":"re_key1","domain2.com":"re_key2"}'
 3. 点击「添加目标地址」，输入转发目标邮箱
 4. 前往目标邮箱收取验证邮件并点击确认链接
 
-![转发目标地址验证](pic/resend/zhuanfa.png)
-
 ```bash
 # 键值对格式
 FORWARD_RULES="vip=a@example.com,news=b@example.com,*=fallback@example.com"
@@ -191,23 +158,6 @@ wrangler d1 execute TEMP_MAIL_DB --command "SELECT * FROM mailboxes LIMIT 10"
 - **静态资源缓存**：更新后在 Cloudflare 控制台 Purge Everything，浏览器强制刷新
 - **R2/D1 费用**：有免费额度限制，建议定期清理过期邮件
 - **安全**：生产环境务必修改默认的 `ADMIN_PASSWORD` 和 `JWT_TOKEN`
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=codingstu/temporary-email&type=Date)](https://www.star-history.com/#codingstu/temporary-email&Date)
-
-## 联系方式
-
-- 微信：`iYear1213`
-
-## Buy me a coffee
-
-如果你觉得本项目对你有帮助，欢迎赞赏支持：
-
-<p align="left">
-  <img src="pic/alipay.jpg" alt="支付宝赞赏码" height="400" />
-  <img src="pic/weichat.jpg" alt="微信赞赏码" height="400" />
-</p>
 
 ## 许可证
 

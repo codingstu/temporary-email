@@ -12,7 +12,8 @@ let currentPage = 1;
 let lastLoadedEmails = [];
 let isSentView = false;
 
-// 邮件缓存
+// 邮件缓存（LRU，最多缓存50条）
+const EMAIL_CACHE_MAX = 50;
 const emailCache = new Map();
 
 // 视图加载状态
@@ -198,7 +199,12 @@ export function renderEmailItem(email, isMobile = false) {
  * @returns {object|undefined}
  */
 export function getEmailFromCache(id) {
-  return emailCache.get(id);
+  if (!emailCache.has(id)) return undefined;
+  // LRU: 移到末尾（最近访问）
+  const val = emailCache.get(id);
+  emailCache.delete(id);
+  emailCache.set(id, val);
+  return val;
 }
 
 /**
@@ -207,7 +213,14 @@ export function getEmailFromCache(id) {
  * @param {object} email - 邮件数据
  */
 export function setEmailCache(id, email) {
+  // LRU: 删除旧的再插入保证顺序
+  if (emailCache.has(id)) emailCache.delete(id);
   emailCache.set(id, email);
+  // 超过上限时删除最旧的
+  if (emailCache.size > EMAIL_CACHE_MAX) {
+    const oldest = emailCache.keys().next().value;
+    emailCache.delete(oldest);
+  }
 }
 
 /**

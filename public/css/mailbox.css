@@ -13,11 +13,11 @@
   --card-glass-hover: rgba(255, 255, 255, 0.85);
   --muted: #64748b;
   --muted2: #94a3b8;
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: rgba(99, 102, 241, 0.12);
-  --primary-glass: rgba(99, 102, 241, 0.06);
-  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-light: rgba(37, 99, 235, 0.12);
+  --primary-glass: rgba(37, 99, 235, 0.06);
+  --primary-gradient: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
   --danger: #ef4444;
   --danger-hover: #dc2626;
   --success: #10b981;
@@ -34,20 +34,20 @@
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
-  --shadow-glass: 0 8px 32px rgba(99, 102, 241, 0.12);
-  --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-glass: 0 8px 32px rgba(37, 99, 235, 0.12);
+  --shadow-glow: 0 0 40px rgba(37, 99, 235, 0.15);
+  --transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --blur-md: blur(16px);
-  --blur-lg: blur(24px);
+  --blur-lg: blur(12px);
   --blur-xl: blur(32px);
 }
 
 /* 暗色模式支持 */
 @media (prefers-color-scheme: dark) {
   :root {
-    --surface: linear-gradient(135deg, #0f172a 0%, #1e1b4b 25%, #1e293b 50%, #18181b 75%, #1c1917 100%);
+    --surface: linear-gradient(135deg, #0f172a 0%, #0c1e3a 25%, #1e293b 50%, #18181b 75%, #1c1917 100%);
     --card: rgba(30, 41, 59, 0.85);
     --card-hover: rgba(30, 41, 59, 0.95);
     --card-glass: rgba(30, 41, 59, 0.6);
@@ -96,7 +96,7 @@ body {
 /* 邮箱信息卡片 */
 .mailbox-info-card {
   background: var(--card);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius);
   padding: 24px;
@@ -118,8 +118,8 @@ body {
   background: var(--primary-light);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-sm);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--shadow);
   flex-wrap: wrap;
 }
@@ -155,8 +155,8 @@ body {
 .chip{
   display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
   font-size:12px;font-weight:600;background:var(--card-glass);border:1px solid var(--border-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--shadow);
 }
 .chip-unread{ color:var(--primary); background:var(--primary-light); }
@@ -170,8 +170,8 @@ body {
   padding: 4px 8px;
   border-radius: var(--radius-sm);
   background: var(--card-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-glass);
   box-shadow: var(--shadow);
 }
@@ -180,8 +180,8 @@ body {
   padding:4px 8px; 
   font-size:12px; 
   background: var(--card-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
@@ -191,8 +191,8 @@ body {
   padding:4px 10px; 
   font-size:12px; 
   background: var(--card-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
@@ -201,7 +201,7 @@ body {
 /* 收件箱卡片 */
 .inbox-card {
   background: var(--card);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius);
   padding: 24px;
@@ -243,8 +243,8 @@ body {
 /* 继承必要的通用样式 */
 .topbar {
   background: var(--card-glass);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-glass);
   display: flex;
   align-items: center;
@@ -298,8 +298,8 @@ body {
   font-size: 13px;
   font-weight: 600;
   border: 1px solid var(--border-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--shadow);
 }
 
@@ -317,8 +317,8 @@ body {
   transition: var(--transition);
   text-decoration: none;
   white-space: nowrap;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .btn-primary {
@@ -370,7 +370,7 @@ body {
 /* 卡片样式 */
 .card {
   background: var(--card);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius);
   box-shadow: var(--shadow-glass);
@@ -483,7 +483,7 @@ body {
 
 .modal-card {
   background: var(--card);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
@@ -588,8 +588,8 @@ body {
   font-size: 14px;
   transition: var(--transition);
   background: var(--card-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--shadow);
 }
 
@@ -667,4 +667,36 @@ body {
   text-align: center;
   color: var(--muted);
   font-size: 12px;
+}
+
+/* =============================================
+   移动端性能优化
+   ============================================= */
+@media (max-width: 768px) {
+  .mailbox-info-card,
+  .mailbox-header,
+  .email-list-card,
+  .email-detail-card,
+  .mailbox-settings-card,
+  .email-item,
+  .header-bar,
+  .tab-btn,
+  .btn {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .mailbox-info-card,
+  .email-list-card,
+  .email-detail-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

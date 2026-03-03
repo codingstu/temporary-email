@@ -133,21 +133,23 @@ export async function copyFromEmailList(event, id, api, showToast) {
 }
 
 /**
- * 预取邮件详情
+ * 预取邮件详情（并行加载，提升性能）
  * @param {Array} emails - 邮件列表
  * @param {Function} api - API 函数
  */
 export async function prefetchEmails(emails, api) {
-  const top = emails.slice(0, 5);
-  for (const e of top) {
-    if (!getEmailFromCache(e.id)) {
+  const top = emails.slice(0, 5).filter(e => !getEmailFromCache(e.id));
+  if (top.length === 0) return;
+  
+  await Promise.allSettled(
+    top.map(async (e) => {
       try {
         const r = await api(`/api/email/${e.id}`);
         const detail = await r.json();
         setEmailCache(e.id, detail);
       } catch(_) {}
-    }
-  }
+    })
+  );
 }
 
 export default {
