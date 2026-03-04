@@ -70,6 +70,11 @@
 3. **配置发件**（可选）：参考 [Resend 配置教程](docs/resend.md)
 
 > 使用 Git 集成部署时，请在 Workers → Settings → Variables 中手动配置环境变量
+>
+> ⚠️ 防止“部署后变量丢失”
+> 1. 保持 `wrangler.toml` 不包含 `[vars]`（本项目已处理）
+> 2. 不要随意修改 Worker 名称 `name`，避免发布到新脚本导致看起来像“变量被清空”
+> 3. 每次发布后在 Dashboard → Worker → Settings 核对绑定，确认存在 `TEMP_MAIL_DB`、`MAIL_EML`、`MAIL_DOMAIN`、`JWT_TOKEN`
 
 ### 环境变量
 
@@ -136,6 +141,7 @@ FORWARD_RULES="" 或 "disabled" 或 "none"
 2. **数据库连接错误**：确认 D1 绑定名为 `TEMP_MAIL_DB`，检查 database_id
 3. **登录问题**：确认 ADMIN_PASSWORD 和 JWT_TOKEN 已设置，清除浏览器缓存
 4. **界面显示异常**：检查静态资源路径，查看浏览器控制台错误
+5. **部署后变量“丢失”**：先确认是否发布到了错误账号/错误脚本名，再到 Worker Settings 检查 `bindings` 是否包含 `TEMP_MAIL_DB`、`MAIL_EML`、`MAIL_DOMAIN`、`JWT_TOKEN`
 </details>
 
 <details>
