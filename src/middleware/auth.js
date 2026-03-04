@@ -282,7 +282,7 @@ export async function authMiddleware(context) {
   const { request, env } = context;
   const url = new URL(request.url);
 
-  const publicPaths = ['/api/login', '/api/logout'];
+  const publicPaths = ['/api/login', '/api/logout', '/api/site-config', '/receive'];
   if (publicPaths.includes(url.pathname)) {
     return null;
   }

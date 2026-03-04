@@ -39,8 +39,7 @@ function parseResendConfig(resendToken) {
  * @returns {string} 选择的API密钥
  */
 export function selectApiKeyForDomain(fromEmail, resendConfig) {
-  if (!fromEmail) return '';
-
+  // 单一密钥模式：直接返回（兼容旧配置）
   if (typeof resendConfig === 'string' && !resendConfig.includes('=')) {
     return resendConfig;
   }
@@ -49,11 +48,44 @@ export function selectApiKeyForDomain(fromEmail, resendConfig) {
     ? resendConfig
     : parseResendConfig(resendConfig);
 
-  const emailMatch = String(fromEmail).match(/@([^>]+)/);
-  if (!emailMatch) return '';
+  // 无发件地址时，尝试默认键或单键兜底
+  const configEntries = Object.entries(config || {}).filter(([, v]) => !!v);
+  if (!fromEmail) {
+    if (config.default) return config.default;
+    if (config._default) return config._default;
+    if (config['*']) return config['*'];
+    return configEntries.length === 1 ? String(configEntries[0][1]) : '';
+  }
+
+  const emailMatch = String(fromEmail).match(/@([^>\s]+)/);
+  if (!emailMatch) {
+    if (config.default) return config.default;
+    if (config._default) return config._default;
+    if (config['*']) return config['*'];
+    return configEntries.length === 1 ? String(configEntries[0][1]) : '';
+  }
 
   const domain = emailMatch[1].toLowerCase().trim();
-  return config[domain] || '';
+
+  // 1) 精确匹配
+  if (config[domain]) return config[domain];
+
+  // 2) 子域回退：a.b.example.com -> b.example.com -> example.com
+  const parts = domain.split('.').filter(Boolean);
+  for (let i = 1; i < parts.length - 1; i++) {
+    const parent = parts.slice(i).join('.');
+    if (config[parent]) return config[parent];
+  }
+
+  // 3) 约定默认键
+  if (config.default) return config.default;
+  if (config._default) return config._default;
+  if (config['*']) return config['*'];
+
+  // 4) 若仅配置了一个键值对，兜底使用该密钥
+  if (configEntries.length === 1) return String(configEntries[0][1]);
+
+  return '';
 }
 
 /**
@@ -131,7 +163,11 @@ export async function sendEmailWithResend(apiKey, payload) {
 export async function sendEmailWithAutoResend(resendConfig, payload) {
   const apiKey = selectApiKeyForDomain(payload.from, resendConfig);
   if (!apiKey) {
-    throw new Error(`未找到域名对应的API密钥: ${payload.from}`);
+    const configuredDomains = getConfiguredDomains(resendConfig);
+    const hint = configuredDomains.length
+      ? `，当前已配置域名: ${configuredDomains.join(', ')}`
+      : '';
+    throw new Error(`未找到域名对应的API密钥: ${payload.from || '(空)'}${hint}`);
   }
   return await sendEmailWithResend(apiKey, payload);
 }

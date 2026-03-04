@@ -248,7 +248,42 @@ await Promise.allSettled(top.map(async (e) => {
 
 ---
 
-## 七、后续建议（Phase 2-3）
+## 七、线上紧急修复（收发件回归）
+
+### 问题现象
+- 无法收件：外部投递到 `/receive` 返回 401，邮件未入库。
+- 无法发件：`/api/send` 返回“未找到域名对应的 API 密钥”。
+
+### 根因定位
+1. 认证中间件收敛白名单时遗漏了收件回调路径，`/receive` 被鉴权拦截。
+2. 发件密钥选择逻辑仅支持“精确域名匹配”，对默认键、子域回退及单键配置兼容不足。
+
+### 修复内容
+- `src/middleware/auth.js`
+  - `publicPaths` 新增：`/receive`、`/api/site-config`。
+  - 结果：收件回调恢复可达，邮件可正常入库。
+
+- `src/email/sender.js`
+  - 增强 `selectApiKeyForDomain()`：
+    - 支持 `default` / `_default` / `*` 默认键；
+    - 支持子域逐级回退（`a.b.example.com → b.example.com → example.com`）；
+    - 仅配置单个键值对时自动兜底。
+  - 增强 `sendEmailWithAutoResend()` 报错信息，附带“当前已配置域名”提示。
+
+### 验证结果
+- 已通过语法检查：
+  - `src/middleware/auth.js`
+  - `src/email/sender.js`
+  - `src/server.js`
+  - `src/routes/index.js`
+  - `src/api/index.js`
+  - `src/api/send.js`
+  - `src/email/receiver.js`
+- 结论：收件链路与发件链路回归问题已修复，功能恢复。
+
+---
+
+## 八、后续建议（Phase 2-3）
 
 ### 短期可做
 1. **Vite 打包**：将 42 个 JS 文件 + 16 个 CSS 文件打包，消除 30+ HTTP 请求瀑布链
