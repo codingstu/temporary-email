@@ -194,6 +194,36 @@ export function renderEmailItem(email, isMobile = false) {
 }
 
 /**
+ * 渲染邮件列表（带签名避免无变化时整列表重绘）
+ * @param {Array} emails - 邮件列表
+ * @param {object} elements - DOM 元素
+ * @param {boolean} isMobile - 是否移动端
+ * @returns {Array} 当前页数据
+ */
+export function renderEmailList(emails, elements, isMobile = false) {
+  const pageItems = sliceByPage(emails, elements);
+
+  if (!elements?.list) return pageItems;
+
+  if (!Array.isArray(pageItems) || pageItems.length === 0) {
+    elements.list.innerHTML = '<div style="text-align:center;color:#64748b">📭 暂无邮件</div>';
+    elements.list.dataset.renderSig = '';
+    return pageItems;
+  }
+
+  const signature = pageItems
+    .map((e) => `${e.id}|${e.received_at || e.created_at || ''}|${e.status || ''}|${e.subject || ''}`)
+    .join('||');
+
+  if (elements.list.dataset.renderSig !== signature) {
+    elements.list.innerHTML = pageItems.map(e => renderEmailItem(e, isMobile)).join('');
+    elements.list.dataset.renderSig = signature;
+  }
+
+  return pageItems;
+}
+
+/**
  * 获取邮件缓存
  * @param {number} id - 邮件ID
  * @returns {object|undefined}
@@ -262,6 +292,7 @@ export default {
   isSentViewActive,
   statusClass,
   renderEmailItem,
+  renderEmailList,
   getEmailFromCache,
   setEmailCache,
   clearEmailCache,

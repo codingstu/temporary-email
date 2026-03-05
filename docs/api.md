@@ -20,7 +20,8 @@
 当请求方携带与服务端环境变量 `JWT_TOKEN` 完全一致的令牌时，将跳过会话 Cookie/JWT 校验，直接被识别为最高管理员（strictAdmin）。
 
 **配置项：**
-- `wrangler.toml` → `[vars]` → `JWT_TOKEN="你的超管令牌"`
+- 在 Cloudflare Dashboard → Worker → Settings → Variables and Secrets 中配置 `JWT_TOKEN`
+- 不建议在 `wrangler.toml` 添加 `[vars]`（Git 集成部署时可能覆盖 Dashboard Variables/Secrets）
 
 **令牌携带方式（任选其一）：**
 - Header（标准）：`Authorization: Bearer <JWT_TOKEN>`

@@ -55,11 +55,11 @@
   /* 移动端彻底隐藏历史邮箱折叠按钮 */
   #mb-toggle{ display:none !important; }
   /* 列表加载提示不挤压布局：改为绝对定位到标题右侧 */
-  #list-loading{ position: relative; }
+  #list-status{ position: relative; }
   @media (max-width: 900px){
     #list-card .listcard-header{ position: relative; }
-    #list-card #list-loading{ position: absolute; right: 52px; top: 50%; transform: translateY(-50%); margin: 0; pointer-events: none; z-index: 1; }
-    #list-card #list-loading span{ display: none; }
+    #list-card #list-status{ position: absolute; right: 52px; top: 50%; transform: translateY(-50%); margin: 0; pointer-events: none; z-index: 1; }
+    #list-card #list-status span{ display: none; }
     #m-refresh-icon{ margin-left: 6px; }
   }
   .topbar{ padding: 12px 20px; }

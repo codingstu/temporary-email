@@ -6,6 +6,25 @@
 import { escapeHtml, escapeAttr, extractCode } from './ui-helpers.js';
 import { getEmailFromCache, setEmailCache } from './email-list.js';
 
+let copyCodeBound = false;
+
+function bindVerificationCodeCopy(modalContent, showToast) {
+  if (copyCodeBound || !modalContent) return;
+  modalContent.addEventListener('click', async (event) => {
+    const target = event.target.closest('[data-copy-code]');
+    if (!target) return;
+    const code = target.getAttribute('data-copy-code') || '';
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      showToast('验证码已复制', 'success');
+    } catch (_) {
+      showToast('复制失败', 'error');
+    }
+  });
+  copyCodeBound = true;
+}
+
 /**
  * 显示邮件详情
  * @param {number} id - 邮件ID
@@ -17,6 +36,8 @@ export async function showEmailDetail(id, elements, api, showToast) {
   const { modal, modalSubject, modalContent } = elements;
   
   try {
+    bindVerificationCodeCopy(modalContent, showToast);
+
     let email = getEmailFromCache(id);
     if (!email || (!email.html_content && !email.content)) {
       const r = await api(`/api/email/${id}`);
@@ -33,13 +54,13 @@ export async function showEmailDetail(id, elements, api, showToast) {
       contentHtml += `
         <div class="verification-code-box" style="margin-bottom:16px;padding:12px;background:var(--success-light);border-radius:8px;display:flex;align-items:center;gap:12px">
           <span style="font-size:20px">🔑</span>
-          <span style="font-size:18px;font-weight:600;font-family:monospace;cursor:pointer" onclick="navigator.clipboard.writeText('${code}').then(()=>showToast('验证码已复制','success'))">${code}</span>
+          <span data-copy-code="${escapeAttr(code)}" style="font-size:18px;font-weight:600;font-family:monospace;cursor:pointer">${escapeHtml(code)}</span>
           <span style="font-size:12px;color:var(--text-muted)">点击复制</span>
         </div>`;
     }
     
     if (email.html_content) {
-      contentHtml += `<iframe class="email-frame" srcdoc="${escapeAttr(email.html_content)}" style="width:100%;min-height:400px;border:none"></iframe>`;
+      contentHtml += `<iframe class="email-frame" loading="lazy" sandbox="allow-popups" referrerpolicy="no-referrer" srcdoc="${escapeAttr(email.html_content)}" style="width:100%;min-height:400px;border:none"></iframe>`;
     } else {
       contentHtml += `<pre style="white-space:pre-wrap;word-break:break-word">${escapeHtml(email.content || '')}</pre>`;
     }
@@ -138,9 +159,13 @@ export async function copyFromEmailList(event, id, api, showToast) {
  * @param {Function} api - API 函数
  */
 export async function prefetchEmails(emails, api) {
-  const top = emails.slice(0, 5).filter(e => !getEmailFromCache(e.id));
+  if (document.hidden) return;
+
+  const isMobile = window.matchMedia?.('(max-width: 900px)').matches;
+  const limit = isMobile ? 2 : 4;
+  const top = emails.slice(0, limit).filter(e => !getEmailFromCache(e.id));
   if (top.length === 0) return;
-  
+
   await Promise.allSettled(
     top.map(async (e) => {
       try {

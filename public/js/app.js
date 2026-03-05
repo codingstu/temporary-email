@@ -12,7 +12,7 @@ import { mockApi, MOCK_STATE } from './modules/app/mock-api.js';
 import { showConfirm } from './modules/app/confirm-dialog.js';
 import { startAutoRefresh, stopAutoRefresh, initVisibilityTracking } from './modules/app/auto-refresh.js';
 import { getCurrentMailbox, setCurrentMailbox, loadCurrentMailbox, clearCurrentMailbox, setCurrentMailboxInfo, getCurrentMailboxInfo } from './modules/app/mailbox-state.js';
-import { renderPager, sliceByPage, prevPage, nextPage, resetPager, setView, isSentViewActive, renderEmailItem, markViewLoaded, isFirstLoad } from './modules/app/email-list.js';
+import { prevPage, nextPage, resetPager, setView, isSentViewActive, renderEmailList, markViewLoaded, isFirstLoad } from './modules/app/email-list.js';
 import { renderMailboxList, renderMbPager, getCurrentPage, setCurrentPage, getPageSize, prevMbPage, nextMbPage, resetMbPage, setSearchTerm, getSearchTerm, setLoading, isLoadingMailboxes, setLastCount, getLastCount } from './modules/app/mailbox-list.js';
 import { initSessionFromCache, validateSession, isGuest, isAdmin, applySessionUI, initGuestMode } from './modules/app/session.js';
 import { loadDomains, getStoredLength, saveLength, updateRangeProgress, getSelectedDomainIndex, populateDomains, STORAGE_KEYS } from './modules/app/domains.js';
@@ -57,6 +57,7 @@ const els = {
   mbList: document.getElementById('mb-list'), mbSearch: document.getElementById('mb-search'), mbLoading: document.getElementById('mb-loading'),
   toast: document.getElementById('toast'), mbPager: document.getElementById('mb-pager'), mbPrev: document.getElementById('mb-prev'),
   mbNext: document.getElementById('mb-next'), mbPageInfo: document.getElementById('mb-page-info'), listLoading: document.getElementById('list-status'),
+  listSpinner: document.getElementById('list-spinner'), listStatusText: document.getElementById('list-status-text'),
   confirmModal: document.getElementById('confirm-modal'), confirmClose: document.getElementById('confirm-close'),
   confirmMessage: document.getElementById('confirm-message'), confirmCancel: document.getElementById('confirm-cancel'), confirmOk: document.getElementById('confirm-ok'),
   emailActions: document.getElementById('email-actions'), toggleCustom: document.getElementById('toggle-custom'),
@@ -82,12 +83,27 @@ const showToast = window.showToast || ((msg, type) => console.log(`[${type}] ${m
 // 刷新状态
 const REFRESH_INTERVAL = 15;
 let countdown = REFRESH_INTERVAL;
-function showHeaderLoading(t) { if (els.listLoading) { els.listLoading.innerHTML = `<span class="spinner"></span>${t || '加载中…'}`; els.listLoading.style.display = 'flex'; }}
-function hideHeaderLoading() { if (els.listLoading) els.listLoading.style.display = 'none'; }
-function showCountdown() { if (els.listLoading) { els.listLoading.innerHTML = `<span class="countdown-icon">⏱</span>${countdown}s 后刷新`; els.listLoading.style.display = 'flex'; }}
+function showHeaderLoading(t) {
+  if (!els.listLoading) return;
+  if (els.listStatusText) els.listStatusText.textContent = t || '加载中…';
+  if (els.listSpinner) els.listSpinner.style.display = 'inline-block';
+  els.listLoading.style.display = 'flex';
+}
+
+function hideHeaderLoading() {
+  if (!els.listLoading) return;
+  els.listLoading.style.display = 'none';
+}
+
+function showCountdown() {
+  if (!els.listLoading) return;
+  if (els.listStatusText) els.listStatusText.textContent = `⏱ ${countdown}s 后刷新`;
+  if (els.listSpinner) els.listSpinner.style.display = 'none';
+  els.listLoading.style.display = 'flex';
+}
 
 // 刷新邮件列表
-async function refresh() {
+async function refresh(force = false) {
   const mailbox = getCurrentMailbox();
   if (!mailbox) return;
   try {
@@ -97,16 +113,30 @@ async function refresh() {
     const ctrl = new AbortController(); const timeout = setTimeout(() => ctrl.abort(), 8000);
     let emails = [];
     try { const r = await api(url, { signal: ctrl.signal }); emails = await r.json(); } finally { clearTimeout(timeout); }
-    if (!Array.isArray(emails) || !emails.length) { els.list.innerHTML = '<div style="text-align:center;color:#64748b">📭 暂无邮件</div>'; if (els.pager) els.pager.style.display = 'none'; return; }
+
     const isMobile = window.matchMedia?.('(max-width: 900px)').matches;
-    els.list.innerHTML = sliceByPage(emails, els).map(e => renderEmailItem(e, isMobile)).join('');
-    if (!isSentViewActive()) prefetchEmails(emails, api);
+    const renderedPageItems = renderEmailList(Array.isArray(emails) ? emails : [], els, isMobile);
+
+    if (!isSentViewActive() && renderedPageItems.length) prefetchEmails(renderedPageItems, api);
     markViewLoaded();
   } catch (_) {}
   finally { hideHeaderLoading(); if (getCurrentMailbox()) { countdown = REFRESH_INTERVAL; showCountdown(); } }
 }
 
-function autoRefreshCallback() { if (countdown > 0) { countdown--; showCountdown(); if (countdown <= 0) refresh().finally(() => { countdown = REFRESH_INTERVAL; showCountdown(); }); }}
+function autoRefreshCallback(force = false) {
+  if (force) {
+    refresh(true).finally(() => { countdown = REFRESH_INTERVAL; showCountdown(); });
+    return;
+  }
+
+  if (countdown > 0) {
+    countdown -= 1;
+    showCountdown();
+    if (countdown <= 0) {
+      refresh().finally(() => { countdown = REFRESH_INTERVAL; showCountdown(); });
+    }
+  }
+}
 
 // 加载邮箱列表
 async function loadMailboxes(opts = {}) {

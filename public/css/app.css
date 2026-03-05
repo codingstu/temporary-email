@@ -499,10 +499,11 @@ body::after{
 
 .container{
   max-width: 1200px; /* 与头部对齐 */
+  width: min(1200px, 100%);
   margin: 0 auto;
   padding: 24px 24px 32px;
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
   min-height: calc(100vh - 100px);
@@ -1001,10 +1002,10 @@ body::after{
 
 /* 侧板收起时的布局优化 */
 .container.sidebar-collapsed .main {
-  transform: translateX(-200px);
-  width: calc(100% + 200px); /* 向左位移同等宽度，消除右侧空白 */
-  max-width: none;
-  padding-right: 200px; /* 右侧留出等同位移的内边距 */
+  transform: none;
+  width: 100%;
+  max-width: 100%;
+  padding-right: 0;
   overflow: hidden;
   transition: background-color 0.4s, color 0.4s, border-color 0.4s, box-shadow 0.4s, opacity 0.4s, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1023,13 +1024,13 @@ body::after{
 }
 
 .container.sidebar-collapsed .mailbox-display-section {
-  min-width: 340px;
-  max-width: 440px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .container.sidebar-collapsed .mailbox-config-section {
-  min-width: 360px;
-  max-width: 420px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* 侧板收起时的邮箱显示区域优化 */
@@ -1181,18 +1182,19 @@ body::after{
 /* 移动端响应式调整 */
 @media (max-width: 768px) {
   .sidebar {
-    min-width: 260px;
+    min-width: 0;
+    width: 100%;
     transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s, opacity 0.3s, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .sidebar.collapsed {
     width: 50px;
     padding: 12px 4px;
-    animation: sidebarPulse 5s ease-in-out infinite;
+    animation: none;
   }
   
   .sidebar.collapsed:hover {
-    animation: sidebarPulse 2.5s ease-in-out infinite;
+    animation: none;
   }
   
   .sidebar.collapsed h3 {

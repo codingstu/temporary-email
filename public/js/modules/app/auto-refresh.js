@@ -22,7 +22,7 @@ export function initVisibilityTracking() {
       // 页面变为可见时，如果距离上次刷新超过间隔时间，立即刷新
       const now = Date.now();
       if (now - lastRefreshTime > AUTO_REFRESH_INTERVAL) {
-        triggerRefresh();
+        triggerRefresh(true);
       }
     }
   });
@@ -44,11 +44,11 @@ export function setRefreshCallback(callback) {
 /**
  * 触发刷新
  */
-async function triggerRefresh() {
-  if (refreshCallback && isPageVisible) {
-    lastRefreshTime = Date.now();
+async function triggerRefresh(force = false) {
+  if (refreshCallback && (isPageVisible || force)) {
+    if (force) lastRefreshTime = Date.now();
     try {
-      await refreshCallback();
+      await refreshCallback(force);
     } catch (e) {
       console.error('Auto refresh error:', e);
     }
@@ -63,15 +63,16 @@ export function startAutoRefresh(callback) {
   if (callback) {
     refreshCallback = callback;
   }
-  
+
   stopAutoRefresh();
   isAutoRefreshEnabled = true;
-  
+
+  // 1s Tick：由上层控制倒计时与是否真正发起请求，避免多个计时器并行导致 UI 抖动
   autoRefreshInterval = setInterval(() => {
     if (isPageVisible && isAutoRefreshEnabled) {
-      triggerRefresh();
+      triggerRefresh(false);
     }
-  }, AUTO_REFRESH_INTERVAL);
+  }, 1000);
 }
 
 /**

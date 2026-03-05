@@ -96,7 +96,9 @@
               existingEnter.onclick = function(){
                 try{
                   // 无邮箱时提示，而不是进入
-                  if (!window.currentMailbox){
+                  var mailboxText = (document.getElementById('email-text') || {}).textContent || '';
+                  var hasMailbox = mailboxText && mailboxText.indexOf('@') > 0;
+                  if (!hasMailbox){
                     try{ window.showToast && window.showToast('请先生成或选择一个邮箱', 'warn'); }catch(_){ }
                     return;
                   }
@@ -115,7 +117,12 @@
           if (genCard) genCard.style.display = 'none';
           // 移动端“历史邮箱”显示侧栏列表到主区域下方，而非显示收件箱卡片
           if (inboxCard) inboxCard.style.display = 'none';
-          try{ var mainWrap = document.querySelector('.main'); if (mainWrap && sidebarEl){ mainWrap.appendChild(sidebarEl); } }catch(_){ }
+          try{
+            var mainWrap = document.querySelector('.main');
+            if (mainWrap && sidebarEl && sidebarEl.parentNode !== mainWrap){
+              mainWrap.appendChild(sidebarEl);
+            }
+          }catch(_){ }
           if (sidebarEl){ sidebarEl.style.display = ''; try{ sidebarEl.classList.add('history-inline'); sidebarEl.classList.remove('collapsed'); sidebarEl.classList.remove('list-collapsed'); }catch(_){ } }
           if (switchWrap) switchWrap.style.display = '';
           lastMainView = 'his';
@@ -167,7 +174,7 @@
                     iconBtn.onclick = function(e){
                       try{
                         e.preventDefault(); e.stopPropagation();
-                        var ll = document.getElementById('list-loading');
+                        var ll = document.getElementById('list-status');
                         if (ll) ll.style.display = 'inline-flex';
                         if (typeof window.refreshEmails === 'function') { window.refreshEmails().finally(function(){ try{ if (ll) ll.style.display='none'; }catch(_){ } }); }
                         else if (typeof refresh === 'function') { refresh(); }
@@ -244,9 +251,10 @@
           }
           else if (hash === 'generate') showGen();
           else if (last === 'history') showHis();
-          else if (last === 'inbox' || last === 'sent') { 
-            // 对于恢复的会话，如果没有当前邮箱，回到生成页面是合理的
-            if (window.currentMailbox) showMailboxView(); else showGen(); 
+          else if (last === 'inbox' || last === 'sent') {
+            // 刷新恢复时通过地址文本判断是否已有邮箱
+            var mailboxText = (document.getElementById('email-text') || {}).textContent || '';
+            if (mailboxText && mailboxText.indexOf('@') > 0) showMailboxView(); else showGen();
           }
           // 默认显示生成页面
           else showGen();
@@ -254,13 +262,16 @@
         return true;
       };
 
-      // 立即尝试，若未就绪则观察 DOM 直到可用
+      // 立即尝试，若未就绪则使用轻量重试，避免全局 MutationObserver 带来持续开销
       if (!setupMainSwitch()){
-        var __mf_mo = new MutationObserver(function(){ if (setupMainSwitch()){ try{ __mf_mo.disconnect(); }catch(_){ } } });
-        try{ __mf_mo.observe(document.body || document.documentElement, { childList: true, subtree: true }); }catch(_){ }
-        // 兜底：页面 load 后或一定延时再尝试一次
+        var retry = 0;
+        var timer = setInterval(function(){
+          retry += 1;
+          if (setupMainSwitch() || retry >= 12){
+            try{ clearInterval(timer); }catch(_){ }
+          }
+        }, 120);
         try{ window.addEventListener('load', function(){ setupMainSwitch(); }, { once: true }); }catch(_){ }
-        try{ setTimeout(function(){ setupMainSwitch(); }, 1200); }catch(_){ }
       }
     }catch(_){ }
   }catch(_){ }
