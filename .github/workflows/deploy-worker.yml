@@ -1,0 +1,63 @@
+name: Deploy Cloudflare Worker
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Wrangler
+        run: npm i -g wrangler@latest
+
+      - name: Inject required secrets to Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          JWT_TOKEN: ${{ secrets.JWT_TOKEN }}
+          MAIL_DOMAIN: ${{ secrets.MAIL_DOMAIN }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          GUEST_PASSWORD: ${{ secrets.GUEST_PASSWORD }}
+          REPO_URL: ${{ secrets.REPO_URL }}
+          SITE_NAME: ${{ secrets.SITE_NAME }}
+          FOOTER_TEXT: ${{ secrets.FOOTER_TEXT }}
+          FORWARD_RULES: ${{ secrets.FORWARD_RULES }}
+        run: |
+          set -e
+          echo "$ADMIN_PASSWORD" | wrangler secret put ADMIN_PASSWORD
+          echo "$JWT_TOKEN" | wrangler secret put JWT_TOKEN
+          echo "$MAIL_DOMAIN" | wrangler secret put MAIL_DOMAIN
+
+          if [ -n "$RESEND_API_KEY" ]; then echo "$RESEND_API_KEY" | wrangler secret put RESEND_API_KEY; fi
+          if [ -n "$GUEST_PASSWORD" ]; then echo "$GUEST_PASSWORD" | wrangler secret put GUEST_PASSWORD; fi
+          if [ -n "$REPO_URL" ]; then echo "$REPO_URL" | wrangler secret put REPO_URL; fi
+          if [ -n "$SITE_NAME" ]; then echo "$SITE_NAME" | wrangler secret put SITE_NAME; fi
+          if [ -n "$FOOTER_TEXT" ]; then echo "$FOOTER_TEXT" | wrangler secret put FOOTER_TEXT; fi
+          if [ -n "$FORWARD_RULES" ]; then echo "$FORWARD_RULES" | wrangler secret put FORWARD_RULES; fi
+
+      - name: Deploy Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: wrangler deploy
+
+      - name: Verify runtime config health
+        env:
+          WORKER_HEALTH_URL: ${{ secrets.WORKER_HEALTH_URL }}
+        run: |
+          if [ -n "$WORKER_HEALTH_URL" ]; then
+            curl -fsSL "$WORKER_HEALTH_URL/api/runtime-config-health"
+          else
+            echo "WORKER_HEALTH_URL not set, skip health check"
+          fi

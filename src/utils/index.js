@@ -5,3 +5,4 @@
 
 export * from './common.js';
 export * from './cache.js';
+export * from './runtime-config.js';

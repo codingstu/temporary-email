@@ -75,6 +75,18 @@
 > 1. 保持 `wrangler.toml` 不包含 `[vars]`（本项目已处理）
 > 2. 不要随意修改 Worker 名称 `name`，避免发布到新脚本导致看起来像“变量被清空”
 > 3. 每次发布后在 Dashboard → Worker → Settings 核对绑定，确认存在 `TEMP_MAIL_DB`、`MAIL_EML`、`MAIL_DOMAIN`、`JWT_TOKEN`
+> 4. 访问 `/api/runtime-config-health`，确认 `success=true`；若为 `503`，按返回 `missing` 字段补齐变量/绑定
+
+### CI 持久注入部署（推荐，彻底规避变量丢失）
+
+仓库已提供 GitHub Actions 工作流 [`deploy-worker.yml`](.github/workflows/deploy-worker.yml)。
+
+1. 在 GitHub 仓库 → Settings → Secrets and variables → Actions 中添加：
+   - 必填：`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`、`ADMIN_PASSWORD`、`JWT_TOKEN`、`MAIL_DOMAIN`
+   - 可选：`RESEND_API_KEY`、`GUEST_PASSWORD`、`REPO_URL`、`SITE_NAME`、`FOOTER_TEXT`、`FORWARD_RULES`
+   - 可选健康检查地址：`WORKER_HEALTH_URL`（例如 `https://your-worker.example.workers.dev`）
+2. 推送到 `main` 分支后自动部署，部署前会重新注入 Secrets，避免 Dashboard 手工改动导致漂移。
+3. 部署后访问 `/api/runtime-config-health`，若返回 `success=true` 即表示运行时配置完整。
 
 ### 环境变量
 
@@ -141,7 +153,7 @@ FORWARD_RULES="" 或 "disabled" 或 "none"
 2. **数据库连接错误**：确认 D1 绑定名为 `TEMP_MAIL_DB`，检查 database_id
 3. **登录问题**：确认 ADMIN_PASSWORD 和 JWT_TOKEN 已设置，清除浏览器缓存
 4. **界面显示异常**：检查静态资源路径，查看浏览器控制台错误
-5. **部署后变量“丢失”**：先确认是否发布到了错误账号/错误脚本名，再到 Worker Settings 检查 `bindings` 是否包含 `TEMP_MAIL_DB`、`MAIL_EML`、`MAIL_DOMAIN`、`JWT_TOKEN`
+5. **部署后变量“丢失”**：先确认是否发布到了错误账号/错误脚本名，再到 Worker Settings 检查 `bindings` 是否包含 `TEMP_MAIL_DB`、`MAIL_EML`、`MAIL_DOMAIN`、`JWT_TOKEN`，并调用 `/api/runtime-config-health` 查看缺失项
 </details>
 
 <details>

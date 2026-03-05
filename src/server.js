@@ -17,6 +17,11 @@ import { extractEmail } from './utils/common.js';
 import { forwardByLocalPart, forwardByMailboxConfig } from './email/forwarder.js';
 import { parseEmailBody, extractVerificationCode } from './email/parser.js';
 import { getForwardTarget } from './db/mailboxes.js';
+import {
+  inspectRuntimeConfig,
+  buildRuntimeConfigErrorResponse,
+  buildRuntimeConfigHealthResponse
+} from './utils/runtime-config.js';
 
 // 单例：路由器和资源管理器只需创建一次（它们是无状态的）
 let _router = null;
@@ -59,6 +64,18 @@ export default {
    * @returns {Promise<Response>} HTTP响应对象
    */
   async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const runtimeConfig = inspectRuntimeConfig(env);
+
+    if (url.pathname === '/api/runtime-config-health') {
+      return addSecurityHeaders(buildRuntimeConfigHealthResponse(runtimeConfig));
+    }
+
+    const protectedPath = url.pathname.startsWith('/api/') || url.pathname === '/api' || url.pathname === '/receive';
+    if (protectedPath && !runtimeConfig.ok) {
+      return addSecurityHeaders(buildRuntimeConfigErrorResponse(runtimeConfig));
+    }
+
     // 获取数据库连接
     let DB;
     try {
@@ -69,7 +86,7 @@ export default {
     }
 
     // 解析邮件域名
-    const MAIL_DOMAINS = (env.MAIL_DOMAIN || 'temp.example.com')
+    const MAIL_DOMAINS = String(env.MAIL_DOMAIN || '')
       .split(/[,\s]+/)
       .map(d => d.trim())
       .filter(Boolean);
@@ -97,6 +114,12 @@ export default {
    * @returns {Promise<void>}
    */
   async email(message, env, ctx) {
+    const runtimeConfig = inspectRuntimeConfig(env);
+    if (!runtimeConfig.ok) {
+      console.error('邮件处理终止：运行时配置缺失', runtimeConfig.missingRequiredKeys);
+      return;
+    }
+
     // 获取数据库连接
     let DB;
     try {

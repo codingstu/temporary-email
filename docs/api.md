@@ -775,10 +775,46 @@ curl "https://your.domain/api/session?admin_token=<JWT_TOKEN>"
 
 ## 系统接口
 
+### GET /api/runtime-config-health
+运行时配置健康检查（用于排查“部署后变量丢失/绑定缺失”）
+
+**返回示例（正常）：**
+```json
+{
+  "success": true,
+  "ok": true,
+  "missingRequiredKeys": [],
+  "required": {
+    "bindings": ["TEMP_MAIL_DB", "MAIL_EML"],
+    "envVars": ["MAIL_DOMAIN", "ADMIN_PASSWORD", "JWT_TOKEN"]
+  },
+  "snapshot": {
+    "MAIL_DOMAIN": "readygo.us.ci",
+    "ADMIN_PASSWORD": "[set]",
+    "JWT_TOKEN": "[set]",
+    "TEMP_MAIL_DB": "[bound]",
+    "MAIL_EML": "[bound]"
+  }
+}
+```
+
+**返回示例（缺失）：**
+```json
+{
+  "success": false,
+  "code": "RUNTIME_CONFIG_MISSING",
+  "missing": ["JWT_TOKEN"],
+  "required": {
+    "bindings": ["TEMP_MAIL_DB", "MAIL_EML"],
+    "envVars": ["MAIL_DOMAIN", "ADMIN_PASSWORD", "JWT_TOKEN"]
+  }
+}
+```
+
 ### POST /receive
 邮件接收回调（用于 Cloudflare Email Routing）
 
-> 需要认证，通常由系统内部调用
+> 该接口为系统入口，不依赖会话 Cookie；生产环境请确保仅由 Cloudflare Email Routing 触发
 
 ---
 
